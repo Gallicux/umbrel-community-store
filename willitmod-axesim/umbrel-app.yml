@@ -2,7 +2,7 @@ manifestVersion: 1
 id: willitmod-axesim
 category: bitcoin
 name: AxeSim
-version: "1.0.4"
+version: "1.0.5"
 tagline: Virtual miner simulator
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axesim/icon.svg
 description: >-
@@ -20,6 +20,6 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 releaseNotes: >-
-  Fix: full model list, selection stability, better readability + digital rain toggle.
+  Fix: full model list, selection stability, better readability + digital rain toggle. Now multi-arch images.
 submitter: WillItMod
 submission: https://github.com/WillItMod/umbrel-community-store/commit/c70d9a6

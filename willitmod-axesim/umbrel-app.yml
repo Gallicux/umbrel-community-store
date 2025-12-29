@@ -10,7 +10,7 @@ description: >-
   without real hardware. It emulates common miner endpoints and produces
   realistic telemetry, jitter, and fault scenarios. Virtual devices only: it
   does not perform real mining or hashing. Supports up to 10 virtual miners;
-  miner ports are exposed on `8801-8810`.
+  miner ports are exposed on `8091-8100`.
 developer: WillItMod
 website: https://github.com/WillItMod/AxeSim-Release
 support: https://github.com/WillItMod/AxeSim-Release/issues

@@ -1,0 +1,130 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      # Use a unique DNS alias to avoid collisions on Umbrel's shared Docker network.
+      APP_HOST: axedgb-app
+      APP_PORT: 3000
+
+  init:
+    image: alpine:3.22.1
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+    environment:
+      APPS_SUBNET: "${NETWORK_IP}/16"
+      RPC_USER: "dgb"
+      RPC_PASSWORD: "${APP_PASSWORD}"
+      DGB_P2P_PORT: "12024"
+      DGB_RPC_PORT: "14022"
+      DGB_ZMQ_HASHBLOCK_PORT: "28344"
+      PAYOUT_ADDRESS: "CHANGEME_DGB_PAYOUT_ADDRESS"
+    command:
+      - /bin/sh
+      - -ec
+      - |-
+        set -eu
+
+        apk add --no-cache envsubst curl >/dev/null
+
+        mkdir -p /data/node /data/pool/config /data/pool/www/pool /data/pool/www/users /data/templates
+
+        # Cleanup from older broken installs (a directory with the script name).
+        if [ -d /data/templates/init-entrypoint.sh ]; then
+          rm -rf /data/templates/init-entrypoint.sh || true
+        fi
+
+        if [ ! -f /data/node/digibyte.conf ]; then
+          envsubst < /data/templates/digibyte.conf.template > /data/node/digibyte.conf
+          chown -R 1000:1000 /data/node
+        else
+          if ! grep -q 'axedgb-seeds-v1' /data/node/digibyte.conf; then
+            echo "[axedgb] Adding bootstrap peers to digibyte.conf"
+            {
+              printf "\n"
+              printf "# AxeDGB bootstrap peers (helps early IBD if DNS seeds are flaky)\n"
+              printf "# axedgb-seeds-v1\n"
+              printf "addnode=5.189.152.60:12024\n"
+              printf "addnode=24.97.94.219:12024\n"
+              printf "addnode=45.76.249.217:12024\n"
+              printf "addnode=47.93.161.68:12024\n"
+              printf "addnode=52.45.88.37:12024\n"
+              printf "addnode=60.12.123.42:12024\n"
+              printf "addnode=66.108.15.5:12024\n"
+              printf "addnode=73.156.140.158:12024\n"
+              printf "addnode=144.76.103.24:12024\n"
+              printf "addnode=184.164.16.141:12024\n"
+            } >> /data/node/digibyte.conf
+          fi
+        fi
+
+        if [ ! -f /data/pool/config/ckpool.conf ]; then
+          envsubst < /data/templates/ckpool.conf.template > /data/pool/config/ckpool.conf
+          chown -R 1000:1000 /data/pool
+        else
+          if ! grep -q '"btcaddress"' /data/pool/config/ckpool.conf || ! grep -q '"webdir"' /data/pool/config/ckpool.conf || ! grep -q '"userdir"' /data/pool/config/ckpool.conf; then
+            mv /data/pool/config/ckpool.conf "/data/pool/config/ckpool.conf.bak.$(date +%s 2>/dev/null || echo 0)" || true
+            envsubst < /data/templates/ckpool.conf.template > /data/pool/config/ckpool.conf
+            chown -R 1000:1000 /data/pool
+          fi
+        fi
+
+  dgbd:
+    image: blocknetdx/digibyte:v7.17.2
+    user: "1000:1000"
+    restart: unless-stopped
+    stop_grace_period: 15m30s
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    ports:
+      - "12024:12024/tcp" # P2P
+    volumes:
+      - ${APP_DATA_DIR}/data/node:/data
+      - ${APP_DATA_DIR}/data/templates/dgb-entrypoint.sh:/dgb-entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/dgb-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "digibyte-cli -datadir=/data getblockchaininfo >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 2m
+
+  ckpool:
+    image: ghcr.io/getumbrel/docker-ckpool-solo:590fb2a
+    command: "-k -B -c /config/ckpool.conf"
+    user: "1000:1000"
+    depends_on:
+      - dgbd
+    restart: on-failure
+    stop_grace_period: 30s
+    ports:
+      - "5678:3333/tcp"
+    volumes:
+      - ${APP_DATA_DIR}/data/pool/config:/config:ro
+      - ${APP_DATA_DIR}/data/pool/www:/www
+
+  app:
+    image: ghcr.io/willitmod/axedgb-app:0.7.26-alpha
+    user: "1000:1000"
+    restart: on-failure
+    stop_grace_period: 30s
+    depends_on:
+      - dgbd
+      - ckpool
+    networks:
+      default:
+        aliases:
+          - axedgb-app
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+    environment:
+      DGB_RPC_HOST: "dgbd"
+      DGB_RPC_PORT: "14022"
+      DGB_RPC_USER: "dgb"
+      DGB_RPC_PASS: "${APP_PASSWORD}"
+      CKPOOL_STATUS_DIR: "/data/pool/www/pool"
+      APP_CHANNEL: "ALPHA"
+      DGB_IMAGE: "blocknetdx/digibyte:v7.17.2"
+      CKPOOL_IMAGE: "ghcr.io/getumbrel/docker-ckpool-solo:590fb2a"
+      STATIC_DIR: "/app/static"

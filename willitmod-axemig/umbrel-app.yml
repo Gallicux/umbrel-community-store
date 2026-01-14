@@ -4,7 +4,7 @@ category: bitcoin
 name: AxeMIG
 version: "0.1.17"
 tagline: EXPERIMENTAL - PRE ALPHA - USE WITH CAUTION
-icon: https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axemig/icon.png
+icon: "https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axemig/icon.png"
 description: >-
   EXPERIMENTAL - PRE ALPHA - USE WITH CAUTION.
 
@@ -26,4 +26,12 @@ repo: https://github.com/WillItMod/umbrel-community-store
 support: https://github.com/WillItMod/AxeMIG-Release/issues
 dependencies: []
 port: 12150
+gallery:
+  - "https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-axemig/icon.png"
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+releaseNotes: >-
+  EXPERIMENTAL - PRE ALPHA - USE WITH CAUTION.
 submitter: WillItMod
+submission: https://github.com/WillItMod/umbrel-community-store/commit/1fb66e1e6fc5ab9a206bdd82ca4f11ec20547ea0

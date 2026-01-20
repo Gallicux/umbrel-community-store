@@ -63,11 +63,18 @@ services:
           envsubst < /data/templates/bitcoin.conf.template > /data/node/bitcoin.conf
           chown -R 1000:1000 /data/node
         else
-          conf="/data/node/bitcoin.conf"
+          # Keep peer limit high on existing installs too.
+          if grep -q '^maxconnections=' /data/node/bitcoin.conf; then
+            sed -i 's/^maxconnections=.*/maxconnections=256/' /data/node/bitcoin.conf
+          else
+            echo '' >> /data/node/bitcoin.conf
+            echo 'maxconnections=256' >> /data/node/bitcoin.conf
+          fi
 
           # Ensure RPC is reachable from other containers (app + ckpool).
           # Older installs may have rpcbind=127.0.0.1 or missing rpcallowip for the apps subnet,
           # which can present as "connection refused" from the UI or pool services.
+          conf="/data/node/bitcoin.conf"
           if ! awk -v apps="$$APPS_SUBNET" 'BEGIN{seenBind=0; seenApps=0}
             /^[[]/{exit}
             $$0=="rpcbind=0.0.0.0"{seenBind=1}
@@ -127,7 +134,8 @@ services:
               END{ maybe_inject() }
             ' "$$conf" > "$$conf.tmp" && mv "$$conf.tmp" "$$conf"
           fi
-          chown 1000:1000 "$$conf" || true
+
+          chown 1000:1000 /data/node/bitcoin.conf || true
         fi
 
         if [ ! -f /data/pool/config/ckpool.conf ]; then
@@ -178,7 +186,25 @@ services:
 
   ckpool:
     image: ghcr.io/getumbrel/docker-ckpool-solo:590fb2a
-    command: "-k -B -L -c /config/ckpool.conf"
+    entrypoint: ["/bin/sh"]
+    command:
+      - -ec
+      - |-
+        # After an unclean host restart, ckpool can leave stale pid files behind in the
+        # container filesystem (Docker restarts the same container, so its writable layer
+        # persists). This can prevent ckpool from starting cleanly until the container is
+        # recreated via an app restart. Remove stale pid files on boot to self-heal.
+        rm -f /tmp/ckpool/*.pid 2>/dev/null || true
+        if command -v ckpool >/dev/null 2>&1; then
+          exec ckpool -k -B -L -c /config/ckpool.conf
+        elif [ -x /bin/ckpool ]; then
+          exec /bin/ckpool -k -B -L -c /config/ckpool.conf
+        elif [ -x /usr/bin/ckpool ]; then
+          exec /usr/bin/ckpool -k -B -L -c /config/ckpool.conf
+        else
+          echo "ckpool binary not found in image"
+          exit 1
+        fi
     user: "1000:1000"
     depends_on:
       - bchn
@@ -191,7 +217,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/www:/www
 
   app:
-    image: ghcr.io/willitmod/axebch-app-umbrel-dev:0.7.101
+    image: ghcr.io/willitmod/axebch-app-umbrel-dev:0.7.139
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s
@@ -208,12 +234,14 @@ services:
     volumes:
       - ${APP_DATA_DIR}/data:/data
     environment:
+      NETWORK_IP: "${NETWORK_IP}"
       BCH_RPC_HOST: "bchn"
       BCH_RPC_PORT: "28332"
       BCH_RPC_USER: "bch"
       BCH_RPC_PASS: "${APP_PASSWORD}"
       CKPOOL_STATUS_DIR: "/data/pool/www/pool"
       APP_CHANNEL: "RC1"
+      APP_VERSION_SUFFIX: "-dev"
       BCHN_IMAGE: "mainnet/bitcoin-cash-node:v28.0.1"
       CKPOOL_IMAGE: "ghcr.io/getumbrel/docker-ckpool-solo:590fb2a"
       STATIC_DIR: "/app/static"

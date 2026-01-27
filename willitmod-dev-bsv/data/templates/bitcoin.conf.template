@@ -26,6 +26,7 @@ port=${BSV_P2P_PORT}
 listen=1
 upnp=1
 
-# Optional pruning (set by AxeBSV on first run)
-# prune=0
+# Pruning (mandatory): keep only a rolling tail of recent blocks to reduce retained history.
+# This app defaults to 2500 and caps at 5000.
+prune=2500
 

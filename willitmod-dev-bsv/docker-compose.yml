@@ -174,7 +174,7 @@ services:
         fi
 
   app:
-    image: ghcr.io/willitmod/axebsv-app-umbrel-dev:0.7.160
+    image: ghcr.io/willitmod/axebsv-app-umbrel-dev:0.7.170
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s
@@ -190,8 +190,7 @@ services:
     environment:
       NETWORK_IP: "${NETWORK_IP}"
       STATIC_DIR: "/app/static"
-      APP_CHANNEL: "DEV"
-      APP_VERSION_SUFFIX: "-dev"
+      APP_CHANNEL: "ALPHA"
       BSVD_IMAGE: "bitcoinsv/bitcoin-sv:1.2.0"
       CKPOOL_IMAGE: "ghcr.io/willitmod/docker-ckpool-solo:590fb2a"
       BSV_RPC_HOST: "bsvd"

@@ -75,9 +75,9 @@ services:
         else
           raw="$$(cat /data/node/.dbcache_mb 2>/dev/null | tr -d ' \t\r\n' || true)"
           if echo "$$raw" | grep -Eq '^[0-9]+$$'; then
-            if [ "$$raw" -lt 4096 ]; then
-              echo "[axedgb] Bumping dbcache preset to 4096MB minimum"
-              echo "4096" > /data/node/.dbcache_mb
+            if [ "$$raw" -lt 6144 ]; then
+              echo "[axedgb] Bumping dbcache preset to 6144MB minimum"
+              echo "6144" > /data/node/.dbcache_mb
               chown 1000:1000 /data/node/.dbcache_mb || true
             fi
           fi
@@ -704,7 +704,7 @@ services:
         fi
 
   dgbd:
-    image: ghcr.io/willitmod/digibyte:8.22.2
+    image: ghcr.io/willitmod/digibyte:8.26.2
     user: "1000:1000"
     restart: unless-stopped
     stop_grace_period: 15m30s
@@ -757,7 +757,7 @@ services:
       - ${APP_DATA_DIR}/data/pool/config/coins.json:/app/coins.json:ro
 
   app:
-    image: ghcr.io/willitmod/axedgb-app:0.9.133.1
+    image: ghcr.io/willitmod/axedgb-app:0.9.142
     user: "1000:1000"
     restart: on-failure
     stop_grace_period: 30s
@@ -783,7 +783,7 @@ services:
       STRATUM_PORTS: "sha256:5678,scrypt:5679"
       MININGCORE_CONF_PATH: "/data/pool/config/miningcore.json"
       APP_CHANNEL: "BETA"
-      DGB_IMAGE: "ghcr.io/willitmod/digibyte:8.22.2"
+      DGB_IMAGE: "ghcr.io/willitmod/digibyte:8.26.2"
       MININGCORE_IMAGE: "ghcr.io/willitmod/axedgb-miningcore:axedgb-0.8.10-r24"
       POSTGRES_IMAGE: "postgres:16-alpine"
       STATIC_DIR: "/app/static"

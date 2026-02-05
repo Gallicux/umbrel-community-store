@@ -13,8 +13,31 @@ services:
     networks:
       - umbrel_main_network
 
+  init_permissions:
+    image: alpine:3.22.1
+    restart: "no"
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+    command:
+      - /bin/sh
+      - -ec
+      - |-
+        set -eu
+        # Ensure Postgres can read its data directory. Some hosts/app-updates can
+        # accidentally chown this to 1000:1000, causing Miningcore API 500s.
+        mkdir -p /data/pool/postgres
+        chown -R 70:70 /data/pool/postgres || true
+        chmod 700 /data/pool/postgres || true
+        # Ensure the UI can update digibyte.conf (/data/node). If this becomes
+        # root-owned, Settings will fail with Errno 13 permission denied.
+        mkdir -p /data/node
+        chown -R 1000:1000 /data/node || true
+
   init:
     image: alpine:3.22.1
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
     volumes:
       - ${APP_DATA_DIR}/data:/data
       - ${APP_DATA_DIR}:/appdata
@@ -272,6 +295,10 @@ services:
           fi
         fi
 
+        # Ensure the UI (uid 1000) can persist Settings changes even if this file
+        # was created/replaced by root during init/upgrade.
+        chown 1000:1000 /data/node/digibyte.conf 2>/dev/null || true
+
         miningcore_conf="/data/pool/config/miningcore.json"
         miningcore_tpl="/data/templates/miningcore.json.template"
 
@@ -316,12 +343,13 @@ services:
                   if type=="object" then
                     (.paymentProcessing = (.paymentProcessing // {"enabled": false}))
                     | (.blockRefreshInterval = ((.blockRefreshInterval // 500) | if . < 2000 then 2000 else . end))
+                    | (.jobRebroadcastTimeout = 60)
                     | (.ports |= (if type=="object" then with_entries(.value |= (if type=="object" then (.listenAddress="0.0.0.0") else . end)) else . end))
                     | (if .id=="dgb-sha256-1" then
                         (.ports |= (if type=="object" then with_entries(.value |= (if type=="object" then
-                          (.varDiff.targetTime = 7)
-                          | (.varDiff.retargetTime = 15)
-                          | (.varDiff.variancePercent = 20)
+                          (.varDiff.targetTime = 15)
+                          | (.varDiff.retargetTime = 120)
+                          | (.varDiff.variancePercent = 50)
                         else . end)) else . end))
                       else . end)
                     | (.daemons = ((.daemons // []) | (if type=="array" then map(if type=="object" then (.port=$$rpcport) else . end) else . end)))
@@ -356,9 +384,9 @@ services:
                    "enabled": $$enabled,
                    "coin": "digibyte-scrypt",
                    "address": $$addr,
-                   "blockRefreshInterval": 500,
-                   "jobRebroadcastTimeout": 10,
-                   "clientConnectionTimeout": 600,
+                 "blockRefreshInterval": 2000,
+                 "jobRebroadcastTimeout": 60,
+                 "clientConnectionTimeout": 600,
                    "paymentProcessing": {"enabled": false},
                    "banning": {"enabled": true, "time": 600, "invalidPercent": 50, "checkThreshold": 50},
                    "ports": {
@@ -409,9 +437,9 @@ services:
                      | (if ($$startdiff > 0) then .difficulty = $$startdiff else . end)
                      | (if ($$mindiff > 0) then .varDiff.minDiff = $$mindiff else . end)
                      | (if ($$maxdiff > 0) then .varDiff.maxDiff = $$maxdiff else .varDiff.maxDiff = null end)
-                     | (.varDiff.targetTime = 7)
-                     | (.varDiff.retargetTime = 15)
-                     | (.varDiff.variancePercent = 20);
+                      | (.varDiff.targetTime = 15)
+                      | (.varDiff.retargetTime = 120)
+                      | (.varDiff.variancePercent = 50);
 
                    (.pools |= (if type=="array" then map(
                      if (.id=="dgb-sha256-1") then
@@ -488,9 +516,9 @@ services:
                    | (if ($$startdiff > 0) then .difficulty = $$startdiff else . end)
                    | (if ($$mindiff > 0) then .varDiff.minDiff = $$mindiff else . end)
                    | (if ($$maxdiff > 0) then .varDiff.maxDiff = $$maxdiff else .varDiff.maxDiff = null end)
-                   | (.varDiff.targetTime = 7)
-                   | (.varDiff.retargetTime = 15)
-                   | (.varDiff.variancePercent = 20);
+                   | (.varDiff.targetTime = 15)
+                   | (.varDiff.retargetTime = 120)
+                   | (.varDiff.variancePercent = 50);
 
                  (.pools |= (if type=="array" then map(
                    if (.id=="dgb-sha256-1") then
@@ -745,6 +773,9 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     shm_size: "256mb"
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
     environment:
       POSTGRES_USER: "miningcore"
       POSTGRES_PASSWORD: "${APP_PASSWORD}"
@@ -773,6 +804,9 @@ services:
     restart: on-failure
     stop_grace_period: 30s
     # Keep the UI up even if the node/pool is still starting.
+    depends_on:
+      init_permissions:
+        condition: service_completed_successfully
     networks:
       default:
         aliases:

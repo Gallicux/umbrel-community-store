@@ -1,9 +1,9 @@
 manifestVersion: 1
-id: Pupapool
+id: pupapool
 category: bitcoin
-name: PupaBCH
+name: PupaPool
 version: "0.7.153"
-tagline: BCH node + solo pool
+tagline: Multi‑difficulty BCH solo mining pool
 description: >-
   A Bitcoin Cash solo mining pool with three fixed‑difficulty ckpool instances
   (250k, 1M, 10M). Designed for home miners and reproducible deployments.
@@ -20,22 +20,29 @@ description: >-
     - Username: walletAddress.workername
     - Password: anything
 
-  Notes:
-    - For maximum compatibility, use a legacy BCH Base58 address (`1...` / `3...`) as the payout address.
-    - Many wallets (e.g. Trust Wallet) show CashAddr (`q...` / `p...`). AxeBCH automatically converts CashAddr to legacy format for ckpool compatibility and shows the converted address.
-    - Conversion happens locally on your device; AxeBCH does not send your address to any external service.
-    - Reference converter (CashAddr <-> legacy): https://bch.info/en/tools/cashaddr
-    - Solo mining is extremely unlikely to find blocks without significant hashrate.
-    - First sync can be slow on small or busy systems. SSD strongly recommended.
+developer: Gallicux
+website: https://github.com/Gallicux/umbrel-community-store
+repo: https://github.com/Gallicux/umbrel-community-store1~manifestVersion: 1
+id: pupapool
+category: bitcoin
+name: PupaPool
+version: "0.7.153"
+tagline: Multi‑difficulty BCH solo mining pool
+description: >-
+  A Bitcoin Cash solo mining pool with three fixed‑difficulty ckpool instances
+  (250k, 1M, 10M). Designed for home miners and reproducible deployments.
 
+  Features:
+    - Three independent ckpool services with fixed difficulty
+    - Clean, minimal architecture (no BCH node included)
+    - Fully reproducible and auditable setup
 
-  Components:
-    - Bitcoin Cash Node (BCHN) full node (MIT): https://gitlab.com/bitcoin-cash-node/bitcoin-cash-node
-    - ckpool (GPLv3) solo pool engine: https://github.com/ctubio/ckpool
-
-
-  Status:
-    - STABLE build: verify payout addresses before mining.
+  Miner connection:
+    - URL: stratum+tcp://<your-host-ip>:9001 (diff 250k)
+    - URL: stratum+tcp://<your-host-ip>:9002 (diff 1M)
+    - URL: stratum+tcp://<your-host-ip>:9003 (diff 10M)
+    - Username: walletAddress.workername
+    - Password: anything
 
 developer: Gallicux
 website: https://github.com/Gallicux/umbrel-community-store

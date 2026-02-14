@@ -1,0 +1,10 @@
+[
+  {
+    "id": "pupapool",
+    "name": "PupaPool",
+    "category": "Mining",
+    "version": "0.7.153",
+    "description": "Multi-difficulty BCH solo mining pool (250k, 1M, 10M).",
+    "repo": "Gallicux/umbrel-community-store"
+  }
+]

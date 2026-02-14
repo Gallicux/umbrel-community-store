@@ -5,24 +5,20 @@ name: PupaBCH
 version: "0.7.153"
 tagline: BCH node + solo pool
 description: >-
-  Run a Bitcoin Cash full node (BCHN) and an integrated solo Stratum v1 pool (ckpool) as a single app.
-
+  A Bitcoin Cash solo mining pool with three fixed‑difficulty ckpool instances
+  (250k, 1M, 10M). Designed for home miners and reproducible deployments.
 
   Features:
-    - Axe-style dashboard for node sync and pool stats
-    - CashAddr to legacy payout address conversion for ckpool compatibility
-    - Difficulty presets (vardiff) tuned for home miners
-    - Blocks view for solved blocks, plus optional history scan
-    - Community support via Discord
-
+    - Three independent ckpool services with fixed difficulty
+    - Clean, minimal architecture (no BCH node included)
+    - Fully reproducible and auditable setup
 
   Miner connection:
-    - Set your payout address in the app Settings tab.
-    - URL: `stratum+tcp://<your-host-ip>:4567`
-    - Username: worker name (optional). `walletAddress.workername` also works, but it does not control payout.
-      Example: `rig01.workername`
+    - URL: stratum+tcp://<your-host-ip>:9001 (diff 250k)
+    - URL: stratum+tcp://<your-host-ip>:9002 (diff 1M)
+    - URL: stratum+tcp://<your-host-ip>:9003 (diff 10M)
+    - Username: walletAddress.workername
     - Password: anything
-
 
   Notes:
     - For maximum compatibility, use a legacy BCH Base58 address (`1...` / `3...`) as the payout address.
@@ -40,10 +36,10 @@ description: >-
 
   Status:
     - STABLE build: verify payout addresses before mining.
-developer: WillItMod-Gallicux
-website: https://github.com/WillItMod/umbrel-community-store
-repo: https://github.com/WillItMod/umbrel-community-store
-support: https://discord.gg/vC2UrFAbUF
+
+developer: Gallicux
+website: https://github.com/Gallicux/umbrel-community-store
+repo: https://github.com/Gallicux/umbrel-community-store
 dependencies: []
 port: 21212
 icon: https://raw.githubusercontent.com/WillItMod/umbrel-community-store/main/willitmod-dev-bch/icon.png

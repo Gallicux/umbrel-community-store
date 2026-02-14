@@ -1,5 +1,5 @@
 manifestVersion: 1
-id: willitmod-dev-bch
+id: Pupapool
 category: bitcoin
 name: PupaBCH
 version: "0.7.153"
@@ -40,7 +40,7 @@ description: >-
 
   Status:
     - STABLE build: verify payout addresses before mining.
-developer: WillItMod
+developer: WillItMod-Gallicux
 website: https://github.com/WillItMod/umbrel-community-store
 repo: https://github.com/WillItMod/umbrel-community-store
 support: https://discord.gg/vC2UrFAbUF
@@ -89,4 +89,4 @@ backupIgnore:
   - data/node/blocks
   - data/node/chainstate
   - data/node/indexes
-submitter: WillItMod
+submitter: WillItMod-Gallicux

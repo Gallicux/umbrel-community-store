@@ -140,6 +140,9 @@ services:
 
         if [ ! -f /data/pool/config/ckpool.conf ]; then
           envsubst < /data/templates/ckpool.conf.template > /data/pool/config/ckpool.conf
+          envsubst < /data/templates/ckpool-250k.conf.template > /data/pool/config/ckpool-250k.conf
+          envsubst < /data/templates/ckpool-1M.conf.template > /data/pool/config/ckpool-1M.conf
+          envsubst < /data/templates/ckpool-10M.conf.template > /data/pool/config/ckpool-10M.conf
           chown -R 1000:1000 /data/pool
         else
           needs_ckpool_regen=0
@@ -184,34 +187,56 @@ services:
       retries: 20
       start_period: 2m
 
-  ckpool:
+  ckpool250k:
     image: ghcr.io/getumbrel/docker-ckpool-solo:590fb2a
     entrypoint: ["/bin/sh"]
     command:
       - -ec
-      - |-
-        # After an unclean host restart, ckpool can leave stale pid files behind in the
-        # container filesystem (Docker restarts the same container, so its writable layer
-        # persists). This can prevent ckpool from starting cleanly until the container is
-        # recreated via an app restart. Remove stale pid files on boot to self-heal.
-        rm -f /tmp/ckpool/*.pid 2>/dev/null || true
-        if command -v ckpool >/dev/null 2>&1; then
-          exec ckpool -k -B -L -c /config/ckpool.conf
-        elif [ -x /bin/ckpool ]; then
-          exec /bin/ckpool -k -B -L -c /config/ckpool.conf
-        elif [ -x /usr/bin/ckpool ]; then
-          exec /usr/bin/ckpool -k -B -L -c /config/ckpool.conf
-        else
-          echo "ckpool binary not found in image"
-          exit 1
-        fi
+      - |
+        rm -f /tmp/ckpool/*.pid || true
+        exec ckpool -k -B -L -c /config/ckpool-250k.conf
     user: "1000:1000"
     depends_on:
       - bchn
     restart: on-failure
-    stop_grace_period: 30s
     ports:
-      - "4567:3333/tcp"
+      - "9001:3333/tcp"
+    volumes:
+      - ${APP_DATA_DIR}/data/pool/config:/config:ro
+      - ${APP_DATA_DIR}/data/pool/www:/www
+
+  ckpool1M:
+    image: ghcr.io/getumbrel/docker-ckpool-solo:590fb2a
+    entrypoint: ["/bin/sh"]
+    command:
+      - -ec
+      - |
+        rm -f /tmp/ckpool/*.pid || true
+        exec ckpool -k -B -L -c /config/ckpool-1M.conf
+    user: "1000:1000"
+    depends_on:
+      - bchn
+    restart: on-failure
+    ports:
+      - "9002:3333/tcp"
+    volumes:
+      - ${APP_DATA_DIR}/data/pool/config:/config:ro
+      - ${APP_DATA_DIR}/data/pool/www:/www
+
+  ckpool10M:
+    image: ghcr.io/getumbrel/docker-ckpool-solo:590fb2a
+    entrypoint: ["/bin/sh"]
+    command:
+      - -ec
+      - |
+        rm -f /tmp/ckpool/*.pid || true
+        exec ckpool -k -B -L -c /config/ckpool-10M.conf
+    user: "1000:1000"
+    depends_on:
+      - bchn
+    restart: on-failure
+    ports:
+      - "9003:3333/tcp"
     volumes:
       - ${APP_DATA_DIR}/data/pool/config:/config:ro
       - ${APP_DATA_DIR}/data/pool/www:/www
@@ -223,7 +248,9 @@ services:
     stop_grace_period: 30s
     depends_on:
       - bchn
-      - ckpool
+      - ckpool250k
+      - ckpool1M
+      - ckpool10M
     networks:
       default:
         aliases:

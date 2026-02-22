@@ -1,0 +1,68 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: $APP_ELECTRS_IP
+      APP_PORT: 3006
+
+  app:
+    image: getumbrel/umbrel-electrs:v1.0.4
+    restart: on-failure
+    environment:
+      ELECTRUM_HIDDEN_SERVICE: "${APP_ELECTRS_RPC_HIDDEN_SERVICE}"
+      ELECTRUM_LOCAL_SERVICE: "${DEVICE_DOMAIN_NAME}"
+
+      # Electrs backend (your node)
+      ELECTRS_HOST: "10.21.0.6"
+      BITCOIN_HOST: "10.21.0.6"
+
+      # RPC credentials from your bitcoin.conf
+      RPC_USER: "btc"
+      RPC_PASSWORD: "b2cfbba04e2f3fe713a89e6a0ac0717da16bbc7e4d7b32d4e8865b8dd59acde5"
+      RPC_PORT: "28332"
+
+    networks:
+      default:
+        ipv4_address: $APP_ELECTRS_IP
+
+  electrs:
+    image: getumbrel/electrs:v0.11.0
+    restart: always
+    environment:
+      ELECTRS_LOG_FILTERS: "INFO"
+      ELECTRS_NETWORK: "mainnet"
+
+      # RPC + P2P from your node
+      ELECTRS_DAEMON_RPC_ADDR: "10.21.0.6:28332"
+      ELECTRS_DAEMON_P2P_ADDR: "10.21.0.6:28333"
+
+      # Electrum RPC port
+      ELECTRS_ELECTRUM_RPC_ADDR: "0.0.0.0:50001"
+
+      ELECTRS_SERVER_BANNER: "Galluz Electrs"
+      ELECTRS_DB_DIR: "/data/db"
+
+    volumes:
+      # REAL blockchain mount
+      - "/home/umbrel/umbrel/app-data/willitmod-btc/data/node:/data/.bitcoin:ro"
+
+      # Electrs internal DB
+      - "${APP_DATA_DIR}/data/electrs:/data"
+
+    ports:
+      - "50001:50001"
+
+    networks:
+      default:
+        ipv4_address: $APP_ELECTRS_NODE_IP
+
+  tor:
+    image: getumbrel/tor:0.4.7.8
+    user: "1000:1000"
+    restart: on-failure
+    volumes:
+      - ${APP_DATA_DIR}/torrc:/etc/tor/torrc:ro
+      - ${TOR_DATA_DIR}:/data
+    environment:
+      HOME: "/tmp"

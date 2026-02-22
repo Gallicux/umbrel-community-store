@@ -1,6 +1,6 @@
 manifestVersion: 1.1
-type: app
-id: electrsx
+
+id: electrx
 category: bitcoin
 name: ElectrsX
 version: "0.11.0"

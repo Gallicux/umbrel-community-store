@@ -1,12 +1,5 @@
 {
   "apps": [
-    "electrx",
-    "pupapool",
-    "willitmod-axebench",
-    "willitmod-axelive",
-    "willitmod-axemig",
-    "willitmod-axesim",
-    "willitmod-btc",
-    "willitmod-dev-dgb"
+    "electrx"
   ]
 }

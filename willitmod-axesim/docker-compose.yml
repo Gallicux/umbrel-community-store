@@ -1,0 +1,25 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: willitmod-axesim_server_1
+      APP_PORT: 8081
+
+  server:
+    image: ghcr.io/willitmod/axesim-release:v1.0.9@sha256:5843e1e63bd38434666e6ab9ae02602b7fb0d58d356c1bc8263d0bf60c54629a
+    restart: on-failure
+    stop_grace_period: 30s
+    init: true
+    ports:
+      - "8091-8100:8091-8100"
+    environment:
+      AXESIM_HOME: /data
+      AXESIM_PORT: 8081
+      AXESIM_HOST: 0.0.0.0
+      AXESIM_PUBLISH_MINERS: 1
+      AXESIM_PUBLISH_HOST: 0.0.0.0
+      AXESIM_PUBLISH_START_PORT: 8091
+      AXESIM_PUBLISH_COUNT: 10
+    volumes:
+      - ${APP_DATA_DIR}/data:/data

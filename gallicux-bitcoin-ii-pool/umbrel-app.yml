@@ -5,38 +5,40 @@ name: Bitcoin II Pool
 version: "1.0.0"
 tagline: Bitcoin II node + solo mining pool
 description: >-
-  RC1 RELEASE
+  Run a Bitcoin II (BC2) full node and an integrated solo Stratum v1
+  mining pool directly on Umbrel.
 
-  AxeBC2 is functional, has successfully found blocks, and has completed
-  extended DEV-channel node and solo-pool testing.
-
-  Run a BitcoinII (BC2) full node and an integrated solo Stratum v1 pool (ckpool) as a single app.
-
+  Bitcoin II Pool combines BitcoinII Core with ckpool and provides a
+  web interface for node synchronization, pool statistics and mining
+  configuration.
 
   Miner connection:
     - URL: `stratum+tcp://<node-ip>:2345`
     - Username: worker name (optional)
     - Password: anything
 
+  Set your Bitcoin II payout address from the app Settings page.
 
-  Notes:
-    - Set your payout address in the app Settings tab.
-    - Initial sync can take a long time and a lot of bandwidth/storage (the node downloads and validates the chain).
-    - Solo mining is extremely unlikely to find blocks without significant hashrate.
+  The BitcoinII blockchain is downloaded and validated locally.
+  Initial synchronization may require significant time, bandwidth
+  and storage.
 
+  Solo mining rewards depend entirely on finding a valid network block
+  and are not guaranteed.
 
   Components:
     - BitcoinII Core: https://github.com/Bitcoin-II/BitcoinII-Core
     - ckpool: https://github.com/ckolivas/ckpool
+
 developer: Gallicux
 website: https://github.com/Gallicux/umbrel-community-store
 repo: https://github.com/Gallicux/umbrel-community-store
 support: https://discord.gg/vC2UrFAbUF
 dependencies: []
 port: 21219
-icon: https://raw.githubusercontent.com/WillItMod/5tratStore-main/main/willitmod-dev-bc2/icon.png
+icon: https://raw.githubusercontent.com/Gallicux/umbrel-community-store/main/gallicux-bitcoin-ii-pool/icon.png
 gallery:
-  - https://raw.githubusercontent.com/WillItMod/5tratStore-main/main/willitmod-dev-bc2/icon.png
+  - https://raw.githubusercontent.com/Gallicux/umbrel-community-store/main/gallicux-bitcoin-ii-pool/icon.png
 path: ""
 defaultUsername: ""
 defaultPassword: ""

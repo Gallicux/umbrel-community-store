@@ -8,7 +8,7 @@
     }
   ],
   "btcaddress": "${PAYOUT_ADDRESS}",
-  "btcsig": "/AxeBC2/",
+  "btcsig": "/BitcoinII/",
   "mindiff": 1,
   "startdiff": 1,
   "maxdiff": 0,
